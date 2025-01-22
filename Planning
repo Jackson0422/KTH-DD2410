@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# {Matay Mayrany}
+# {mayrany@kth.se}
+
+import heapq
+import math
+from dubins import *
+
+class N:   Planning
+    def __init__(self, a, b, c, d, e, f):
+        self.a = a  
+        self.b = b  
+        self.c = c 
+        self.d = d  
+        self.e = e 
+        self.f = f  
+
+    def __lt__(self, o):
+        return self.f < o.f
+
+class P:  
+    def w(self, a, b):
+        if a < self.c.xlb or a > self.c.xub or b < self.c.ylb or b > self.c.yub:
+            print("Not in the map")
+            return True
+
+        for o in self.c.obs:
+            d = math.sqrt((a - o[0]) ** 2 + (b - o[1]) ** 2)  
+            if d <= o[2]:
+                print("Find collision!")
+                return True
+
+        return False
+
+    def t(self, a, b, c, d, e, r):
+        i = 100 if r == 0 else 157  
+        g = False  
+        h = False  
+        x = 0  
+
+        while x < i:  
+            a, b, c = step(self.c, a, b, c, r)
+            c = self.n(c)  
+
+            d.append(r)
+            e.append(e[-1] + 0.01)
+
+            if self.w(a, b):  
+                g = True
+                break
+
+            if self.q(a, b):  
+                h = True
+                break
+
+            x += 1  
+
+        return g, h, a, b, c, d, e
+
+    @staticmethod
+    def n(c):
+        return (c + math.pi) % (2 * math.pi) - math.pi
+
+    def f(self):
+        s = N(
+            self.c.x0, self.c.y0, 0, [], [0],
+            self.d(self.c.x0, self.c.y0)
+        )
+        v = []  
+        heapq.heappush(v, s)
+        m = [-math.pi / 4, 0, math.pi / 4] 
+
+        while v: 
+            n = heapq.heappop(v)
+
+            i = 0
+            while i < len(m):  
+                r = m[i]
+                g, h, a, b, c, d, e = self.t(
+                    n.a, n.b, n.c, 
+                    n.d[:], n.e[:], r
+                )
+
+                if h:  
+                    return n.d, n.e
+
+                nm = (round(a, 1), round(b, 1), round(c, 1))  
+                if not g and nm not in self.p:
+                    self.p.add(nm)
+                    cs = self.d(a, b)  
+                    nn = N(a, b, c, d, e, cs)  
+                    heapq.heappush(v, nn)
+                i += 1  
+
+        return [], [0]
+
+    def q(self, a, b):
+        if math.sqrt((a - self.c.xt) ** 2 + (b - self.c.yt) ** 2) <= 0.1:
+            print("goal find!")
+            return True
+        return False
+
+    def d(self, a, b):
+        return math.sqrt((a - self.c.xt) ** 2 + (b - self.c.yt) ** 2)
+
+    def __init__(self, c):
+        self.c = c  
+        self.p = set()  
+
+def solution(c):
+    p = P(c)
+    return p.f()
