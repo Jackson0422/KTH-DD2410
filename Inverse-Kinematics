@@ -1,0 +1,237 @@
+#! /usr/bin/env python3
+import math
+import numpy as np 
+from functools import reduce
+"""
+    # {student full name}
+    # {student email}
+"""
+
+def scara_IK(point):
+    x = point[0]
+    y = point[1]
+    z = point[2]
+    
+
+    """
+    Fill in your IK solution here and return the three joint values in q
+    """
+    X0 = x - 0.07
+    Y0 = y
+    Z0 = z
+    arm1 = 0.3
+    arm2 = 0.35
+    
+
+    Cossin_Alpha_Theta2 = (X0**2 + Y0**2 - arm1**2 -arm2**2)/(2 * arm2 * arm1)
+    Sin_Alpha_Theta2  = math.sqrt(1 - Cossin_Alpha_Theta2**2)
+    Theta_2 = math.atan2(Sin_Alpha_Theta2,Cossin_Alpha_Theta2)
+   
+  
+
+    Cossin_Alpha_b = (arm1**2 + X0**2 + Y0**2 - arm2**2)/(2 * arm1 * math.sqrt(X0**2 + Y0**2))
+    Alpha_b = math.acos(Cossin_Alpha_b)
+    Sin_big = Y0/math.sqrt(X0**2 + Y0**2)
+    Cos_big = X0/math.sqrt(X0**2 + Y0**2)
+    Angle_big = math.atan2(Sin_big,Cos_big)
+    
+
+    Theta_1 = Angle_big- Alpha_b
+    
+    q0 = Theta_1
+    q1 = Theta_2
+    q2 = Z0
+
+    q = [q0, q1, q2]
+
+    return q
+
+
+def KUKA_DH(q):        #prepare the DH charts
+    L = 0.4
+    M = 0.39
+
+    
+    KUKA_DH = [[math.pi/2, 0, 0, q[0]],
+               [-math.pi/2, 0, 0, q[1]],
+               [-math.pi/2, L, 0, q[2]],
+               [math.pi/2, 0, 0, q[3]],
+               [math.pi/2, M, 0, q[4]],
+               [-math.pi/2, 0, 0, q[5]],
+               [0, 0, 0, q[6]]]
+    
+    return KUKA_DH 
+
+def KUKA_T(q):       #prepare the T1 - T7 and T
+    DH = KUKA_DH(q)  
+
+    T1 = np.array([[math.cos(DH[0][3]), -math.sin(DH[0][3]) * math.cos(DH[0][0]), math.sin(DH[0][3]) * math.sin(DH[0][0]), 0],
+                   [math.sin(DH[0][3]), math.cos(DH[0][3]) * math.cos(DH[0][0]), -math.cos(DH[0][3]) * math.sin(DH[0][0]), 0],
+                   [0, math.sin(DH[0][0]), math.cos(DH[0][0]), DH[0][1]],
+                   [0, 0, 0, 1]])
+
+    T2 = np.array([[math.cos(DH[1][3]), -math.sin(DH[1][3]) * math.cos(DH[1][0]), math.sin(DH[1][3]) * math.sin(DH[1][0]), 0],
+                   [math.sin(DH[1][3]), math.cos(DH[1][3]) * math.cos(DH[1][0]), -math.cos(DH[1][3]) * math.sin(DH[1][0]), 0],
+                   [0, math.sin(DH[1][0]), math.cos(DH[1][0]), DH[1][1]],
+                   [0, 0, 0, 1]])
+
+    T3 = np.array([[math.cos(DH[2][3]), -math.sin(DH[2][3]) * math.cos(DH[2][0]), math.sin(DH[2][3]) * math.sin(DH[2][0]), 0],
+                   [math.sin(DH[2][3]), math.cos(DH[2][3]) * math.cos(DH[2][0]), -math.cos(DH[2][3]) * math.sin(DH[2][0]), 0],
+                   [0, math.sin(DH[2][0]), math.cos(DH[2][0]), DH[2][1]],
+                   [0, 0, 0, 1]])
+
+    T4 = np.array([[math.cos(DH[3][3]), -math.sin(DH[3][3]) * math.cos(DH[3][0]), math.sin(DH[3][3]) * math.sin(DH[3][0]), 0],
+                   [math.sin(DH[3][3]), math.cos(DH[3][3]) * math.cos(DH[3][0]), -math.cos(DH[3][3]) * math.sin(DH[3][0]), 0],
+                   [0, math.sin(DH[3][0]), math.cos(DH[3][0]), DH[3][1]],
+                   [0, 0, 0, 1]])
+
+    T5 = np.array([[math.cos(DH[4][3]), -math.sin(DH[4][3]) * math.cos(DH[4][0]), math.sin(DH[4][3]) * math.sin(DH[4][0]), 0],
+                   [math.sin(DH[4][3]), math.cos(DH[4][3]) * math.cos(DH[4][0]), -math.cos(DH[4][3]) * math.sin(DH[4][0]), 0],
+                   [0, math.sin(DH[4][0]), math.cos(DH[4][0]), DH[4][1]],
+                   [0, 0, 0, 1]])
+
+    T6 = np.array([[math.cos(DH[5][3]), -math.sin(DH[5][3]) * math.cos(DH[5][0]), math.sin(DH[5][3]) * math.sin(DH[5][0]), 0],
+                   [math.sin(DH[5][3]), math.cos(DH[5][3]) * math.cos(DH[5][0]), -math.cos(DH[5][3]) * math.sin(DH[5][0]), 0],
+                   [0, math.sin(DH[5][0]), math.cos(DH[5][0]), DH[5][1]],
+                   [0, 0, 0, 1]])
+
+    T7 = np.array([[math.cos(DH[6][3]), -math.sin(DH[6][3]) * math.cos(DH[6][0]), math.sin(DH[6][3]) * math.sin(DH[6][0]), 0],
+                   [math.sin(DH[6][3]), math.cos(DH[6][3]) * math.cos(DH[6][0]), -math.cos(DH[6][3]) * math.sin(DH[6][0]), 0],
+                   [0, math.sin(DH[6][0]), math.cos(DH[6][0]), DH[6][1]],
+                   [0, 0, 0, 1]])
+
+    T = T1 @ T2 @ T3 @ T4 @ T5 @ T6 @ T7
+    
+    return T, T1, T2, T3, T4, T5, T6, T7
+
+
+def KUKA_Jacobian(q):
+    # T1 = KUKA_T(q)[1] 
+    # T2 = KUKA_T(q)[2] @ KUKA_T(q)[1]
+    # T3 = KUKA_T(q)[3] @ KUKA_T(q)[2] @ KUKA_T(q)[1]
+    # T4 = KUKA_T(q)[4] @ KUKA_T(q)[3] @ KUKA_T(q)[2] @ KUKA_T(q)[1]
+    # T5 = KUKA_T(q)[5] @ KUKA_T(q)[4] @ KUKA_T(q)[3] @ KUKA_T(q)[2] @ KUKA_T(q)[1]
+    # T6 = KUKA_T(q)[6] @ KUKA_T(q)[5] @ KUKA_T(q)[4] @ KUKA_T(q)[3] @ KUKA_T(q)[2] @ KUKA_T(q)[1]
+    # T7 = KUKA_T(q)[7] @ KUKA_T(q)[6] @ KUKA_T(q)[5] @ KUKA_T(q)[4] @ KUKA_T(q)[3] @ KUKA_T(q)[2] @ KUKA_T(q)[1]
+    T = KUKA_T(q)[1:]
+    transforms = [reduce(np.dot,T[:i],np.eye(4)) for i in range(len(T))]
+    T1, T2, T3, T4, T5, T6, T7 = transforms[0], transforms[1], transforms[2], transforms[3], transforms[4], transforms[5], transforms[6]
+ 
+
+
+    T1_new = T1[:-1]              # remove the last line      
+    T2_new = T2[:-1]
+    T3_new = T3[:-1]
+    T4_new = T4[:-1]
+    T5_new = T5[:-1]
+    T6_new = T6[:-1]
+    T7_new = T7[:-1]
+
+
+
+    T1_new_C = T1_new[:, 2:]     # remove the first and second column
+    T2_new_C = T2_new[:, 2:]
+    T3_new_C = T3_new[:, 2:]
+    T4_new_C = T4_new[:, 2:]
+    T5_new_C = T5_new[:, 2:]
+    T6_new_C = T6_new[:, 2:]
+    T7_new_C = T7_new[:, 2:]
+    fraction = np.array([[0],
+                [0],
+                [0.078],
+                [1]])
+
+    T = KUKA_T(q)[0] @ fraction
+    p_new = T[:3].T.flatten()
+    
+      # 获取 z0 - z6
+    z0 = np.array([T1_new_C[0][0], T1_new_C[1][0], T1_new_C[2][0]])
+    z1 = np.array([T2_new_C[0][0], T2_new_C[1][0], T2_new_C[2][0]])
+    z2 = np.array([T3_new_C[0][0], T3_new_C[1][0], T3_new_C[2][0]])
+    z3 = np.array([T4_new_C[0][0], T4_new_C[1][0], T4_new_C[2][0]])
+    z4 = np.array([T5_new_C[0][0], T5_new_C[1][0], T5_new_C[2][0]])
+    z5 = np.array([T6_new_C[0][0], T6_new_C[1][0], T6_new_C[2][0]])  
+    z6 = np.array([T7_new_C[0][0], T7_new_C[1][0], T7_new_C[2][0]])
+    print("z0",z0)
+    print("z1",z1)
+    print("z2",z2)
+    print("z3",z3)
+    print("z4",z4)
+    print("z5",z5)
+    print("z6",z6)
+    # 获取 p0 - p7
+    p1 = np.array([T1_new_C[0][1], T1_new_C[1][1], T1_new_C[2][1]])
+    p2 = np.array([T2_new_C[0][1], T2_new_C[1][1], T2_new_C[2][1]])  
+    p3 = np.array([T3_new_C[0][1], T3_new_C[1][1], T3_new_C[2][1]])
+    p4 = np.array([T4_new_C[0][1], T4_new_C[1][1], T4_new_C[2][1]])
+    p5 = np.array([T5_new_C[0][1], T5_new_C[1][1], T5_new_C[2][1]])
+    p6 = np.array([T6_new_C[0][1], T6_new_C[1][1], T6_new_C[2][1]])
+    p7 = np.array([T7_new_C[0][1], T7_new_C[1][1], T7_new_C[2][1]])
+    print("q1",p1)
+    print("q2",p2)
+    print("q3",p3)
+    print("q4",p4)
+    print("q5",p5)
+    print("q6",p6)
+    print("q7",p7)
+    print("q_new",p_new)
+
+    # Jacobian_matrix = [[np.cross(z0,p7 - p0),np.cross(z0,p7 - p1),np.cross(z0,p7 - p2),np.cross(z0,p7 - p3),np.cross(z0,p7 - p4),np.cross(z0,p7 - p5),np.cross(z0,p7 - p6)],
+    #                    [z0,z1,z2,z3,z4,z5,z6]]
+    J1 = np.array([np.cross(z0, p_new - p1).T, 
+        np.cross(z1, p_new - p2).T, 
+        np.cross(z2, p_new - p3).T, 
+        np.cross(z3, p_new - p4).T, 
+        np.cross(z4, p_new - p5).T, 
+        np.cross(z5, p_new - p6).T, 
+        np.cross(z6, p_new - p7).T]).T
+
+    # 获取雅可比矩阵的第二行（z向量）
+    J2 = np.array([z0, z1, z2, z3, z4, z5, z6]).T
+
+
+    # 将 J1 和 J2 拼接在一起，确保维度匹配
+    Jacobian_matrix = np.concatenate((J1, J2))
+    print(Jacobian_matrix, '\n\n\n\n')
+    pass
+    return Jacobian_matrix
+
+
+def kuka_IK(point, R, q):
+    x = point[0]
+    y = point[1]
+    z = point[2]
+    q = q #it must contain 7 elements
+
+    """
+    Fill in your IK solution here and return the seven joint values in q
+    """
+    for i in range(100):
+        T = KUKA_T(q)[0]
+        J = KUKA_Jacobian(q)
+        J_I = np.linalg.pinv(J)
+
+        fraction = np.array([[0],
+                    [0],
+                    [0.078],
+                    [1]])
+
+        p = T @ fraction
+        p_new = p[:3].T.flatten() + [0, 0, 0.311]
+        p_error = point - p_new
+        r_new = np.array(T[:3, :3])
+        R = np.array(R)
+        Rx, Ry, Rz = R[:, 0], R[:, 1], R[:, 2]
+        rx, ry, rz = r_new[:, 0], r_new[:, 1], r_new[:, 2]
+        print(rx, Ry)
+        # r_error = 1/2 * (np.cross(Rx, rx) + np.cross(Ry, ry) + np.cross(Rz, rz))
+        r_error = 0.5 * (np.cross(Rx, rx) + np.cross(Ry, ry) + np.cross(Rz, rz))
+
+        X = np.concatenate((p_error, r_error))
+        x_math = np.linalg.norm(X)
+        
+        q = q + J_I @ X
+
+        if x_math < 0.01:
+            break
+    return q
