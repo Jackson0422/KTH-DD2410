@@ -29,5 +29,3 @@ Work with occupancy grids or similar representations; update rules and simple ma
 
 （可选）与规划结合，在已知/未知栅格环境中实现导航。
 
-These topics align with the DD2410 official syllabus coverage (kinematics, control, navigation, planning).
-上述主题与 DD2410 官方课程涵盖内容相一致（运动学、控制、导航与规划）。
